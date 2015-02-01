@@ -1,0 +1,23 @@
+@(title: String)(content: Html)
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>@title</title>
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/jquery-ui.theme.min.css")">
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/jquery-ui.structure.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/bootstrap.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+        <script src="@routes.Assets.at("javascripts/jquery-1.11.2.min.js")"></script>
+        <script src="@routes.Assets.at("javascripts/jquery-ui.min.js")"></script>
+        <script src="@routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/jquery.validate.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/additional-methods.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <div id="busy-spinner"></div>
+        @content
+    </body>
+</html>
