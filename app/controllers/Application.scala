@@ -19,14 +19,14 @@ object Application extends Controller with MongoController {
 
   def ids(itemId: Option[String]) = Action.async {
     val catalogList = itemId match {
-      case Some(id) => matchIds(id)
+      case Some(id) => matchingId(id)
       case None => matchAllIds
     }
     val futureJsonArray: Future[JsArray] = catalogList.map {id => Json.arr(id)}
     futureJsonArray.map (p => Ok(Json.arr(p(0).as[List[Map[String, String]]].map(_("id")))(0)))
   }
 
-  def matchIds(id: String) = collection.find(Json.obj("id" -> Json.obj("$regex" -> id)), Json.obj("id" -> 1, "_id" -> 0)).cursor[JsObject].collect[List]()
+  def matchingId(id: String) = collection.find(Json.obj("id" -> Json.obj("$regex" -> id)), Json.obj("id" -> 1, "_id" -> 0)).cursor[JsObject].collect[List]()
 
   def matchAllIds = collection.find(Json.obj(), Json.obj("id" -> 1, "_id" -> 0)).cursor[JsObject].collect[List]()
 
@@ -36,22 +36,10 @@ object Application extends Controller with MongoController {
     futureJsonArray.map { p => Ok(p(0))}
   }
 
-  def updatePrice(id: String, newPrice: Double) =  Action.async {
-    import play.modules.reactivemongo.json.BSONFormats._
-
-    val selector = BSONDocument("id" -> id)
-
-    val modifier = BSONDocument("$set" -> BSONDocument("pricing.price" -> newPrice))
-
-    // get a future update
-    val futureUpdate = collection.update(selector, modifier)
-    futureUpdate.map(p =>
-      Ok(s"{\42id\42:\42$id\42,\42action\42:\42update\42, \42item\42:\42price\42, \42value\42:$newPrice}")
-        .as("application/json"))
-  }
-
   def updateTitle(id: String, newTitle: String) = Action.async {
     import play.modules.reactivemongo.json.BSONFormats._
+
+    // TODO verify new title only contains alphanumeric characters, spaces and underscores before update
 
     val selector = BSONDocument("id" -> id)
 
@@ -59,8 +47,29 @@ object Application extends Controller with MongoController {
 
     // get a future update
     val futureUpdate = collection.update(selector, modifier)
-    futureUpdate.map(p => Ok(s"{\42id\42:\42$id\42,\42action\42:\42update\42, \42item\42:\42title\42, \42value\42:\42$newTitle\42}")
-      .as("application/json"))
+    futureUpdate.map(p => Ok(buildResponse(id, "update", "title", newTitle)).as("application/json"))
+  }
+
+  def updatePrice(id: String, newPrice: Double) =  Action.async {
+    import play.modules.reactivemongo.json.BSONFormats._
+
+    // TODO verify new price against cost before update
+
+    val selector = BSONDocument("id" -> id)
+
+    val modifier = BSONDocument("$set" -> BSONDocument("pricing.price" -> newPrice))
+
+    // get a future update
+    val futureUpdate = collection.update(selector, modifier)
+
+    futureUpdate.map(p => Ok(buildResponse(id, "update", "price", newPrice)).as("application/json"))
+  }
+
+  private def buildResponse(id: String, action: String, item: String, value: String) = {
+    Json.obj("id" -> id, "action" -> action, "item" -> item, "value" -> value).toString()
+  }
+
+  private def buildResponse(id: String, action: String, item: String, value: Double) = {
+    Json.obj("id" -> id, "action" -> action, "item" -> item, "value" -> value).toString()
   }
 }
-
